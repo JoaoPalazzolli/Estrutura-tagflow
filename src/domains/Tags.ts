@@ -3,10 +3,13 @@ export interface Tag {
     agent: string;
     tag: string;
     parentIndex: string;
-    fromParentIndex?: number; // Propriedade opcional para especificar o pai
-    count: number;
-    paths?: { [key: string]: number }; // Adicionado para rastrear contagens por caminho
+    counts: Count[];
     children: Tag[];
+}
+
+export interface Count{
+    fromParentIndex: number;
+    count: number;
 }
 
 export default Tag;

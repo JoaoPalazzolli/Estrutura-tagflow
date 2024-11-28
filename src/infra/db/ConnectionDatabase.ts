@@ -1,15 +1,21 @@
-import mongoose from 'mongoose';
 import environments from '../configs/LoadEnvironment';
+import { Pool } from 'pg';
 
-export async function connectToDatabase() {
-    try {
-        // Conectar ao cliente MongoDB
-        const db = await mongoose.connect(environments.DATABASE_URL)
-        return db.connection;
-    } catch (err) {
-        console.error("Erro ao conectar ao MongoDB", err);
-        throw err;
-    }
-}
+const pool = new Pool({
+  user: environments.DATABASE_USERNAME,
+  host: environments.DATABASE_HOST,
+  database: environments.DATABASE_SCHEMA,
+  password: environments.DATABASE_PASSWORD,
+  port: environments.DATABASE_PORT
+});
 
-export default connectToDatabase;
+pool.connect((err) => {
+  if (err) {
+    console.error('Erro ao conectar no PostgreSQL', err);
+  } else {
+    console.log('Conectado ao PostgreSQL');
+  }
+});
+
+export default pool;
+
