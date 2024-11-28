@@ -4,56 +4,55 @@ export function buildTree(data: Tag[]): any[] {
     const nameMapping: { [key: string]: any } = {};
     const rootNodes: any[] = [];
 
-    // Cria todos os nós
-    data.forEach(node => {
-        nameMapping[node.index] = {
-            index: node.index,
-            name: node.tag,
-            agent: node.agent,
-            parentIndex: node.parentIndex,
-            count: node.count,
-            children: []
-        };
+    // Criar todos os nós e mapear pelo índice
+    data.forEach((node) => {
+        if (!nameMapping[node.index]) {
+            nameMapping[node.index] = {
+                index: node.index,
+                name: node.tag,
+                agent: node.agent,
+                parentIndex: node.parentIndex,
+                count: node.count,
+                children: []
+            };
+        } else {
+            // Se o nó já existir, apenas atualize o count e outros dados relevantes
+            nameMapping[node.index].count += node.count;
+            nameMapping[node.index].parentIndex = node.parentIndex; // Atualiza parentIndex se necessário
+        }
     });
 
-    // Conecta as tags aos pais
-    data.forEach(node => {
+    // Conectar nós aos seus pais
+    data.forEach((node) => {
         const treeNode = nameMapping[node.index];
-        let parentIndex: any; 
+        let parentIndices: string[] = [];
 
+        // Lidar com múltiplos pais
         if (node.parentIndex && node.parentIndex.includes("|")) {
-            parentIndex = splitManyParent(node.parentIndex);
+            parentIndices = node.parentIndex.split("|").map((id) => id.trim());
+        } else if (node.parentIndex) {
+            parentIndices = [node.parentIndex];
         }
 
-        if (node.parentIndex && !node.parentIndex.includes("|")) {
-            parentIndex = nameMapping[Number(node.parentIndex)];
-        }
-
-        if (!parentIndex || parentIndex === 0) {
-            // Nó raiz
+        // Adicionar o nó ao seu(s) pai(s)
+        if (parentIndices.length === 0) {
+            // Caso sem pai (nó raiz)
             rootNodes.push(treeNode);
-        } else if (Array.isArray(parentIndex)) {
-            // Caso especial: múltiplos pais
-            parentIndex.forEach(parentTag => {
-                const parent = nameMapping[Number(parentTag.trim())];
+        } else {
+            parentIndices.forEach((parentId) => {
+                const parent = nameMapping[parentId];
                 if (parent) {
-                    const clonedNode = { ...treeNode, children: [...treeNode.children] };
-                    parent.children.push(clonedNode);
+                    // Garante que a tag não seja adicionada como filha mais de uma vez
+                    const existingChild = parent.children.find((child: any) => child.index === treeNode.index);
+                    if (!existingChild) {
+                        parent.children.push(treeNode);
+                    }
                 }
             });
-        } else {
-            // Nó com um único pai
-            if (parentIndex) {
-                parentIndex.children.push(treeNode);
-            }
         }
     });
 
     return rootNodes;
-}
-
-function splitManyParent(data: String) {
-    return data.split("|");
 }
 
 export default buildTree;

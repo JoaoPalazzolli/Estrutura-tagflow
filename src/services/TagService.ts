@@ -4,7 +4,7 @@ import connection from '../infra/db/ConnectionDatabase';
 import { buildTree } from '../utils/TreeUtils';
 import environments from '../infra/configs/LoadEnvironment';
 
-async function findByAgent(req: Request, res: Response){
+async function findByAgent(req: Request, res: Response) {
     try {
         const agent = req.params.agent;
         const db = await connection();
@@ -25,64 +25,74 @@ async function findByAgent(req: Request, res: Response){
     }
 }
 
-async function createTag(req: Request, res: Response){
+async function createTag(req: Request, res: Response) {
     try {
-        const tag: Tag = req.body
+        const tag: Tag = req.body;
         const db = await connection();
         const collection = db.collection(environments.DATABASE_COLLECTION);
 
-        if(!validTag(tag)){
+        if (!validTag(tag)) {
             res.status(400).json({ message: "A tag não pode ser seu próprio pai" });
             return;
         }
 
-        if(await isUpdate(tag)){
-            await collection.updateOne( { "index": tag.index, "agent": tag.agent }, {
-                $set: tag, 
-                $inc: { count: 1 }          
-              } )
-        } else{
+        // Verifica se a tag já existe para realizar a atualização do count
+        const existingTag = await collection.findOne({ "index": tag.index, "agent": tag.agent });
+
+        if (existingTag) {
+            // Se a tag já existir, incrementa o campo count e atualiza outros campos relevantes
+            await collection.updateOne(
+                { "index": tag.index, "agent": tag.agent },
+                {
+                    $inc: { count: 1 },
+                    $set: {
+                        tag: tag.tag,
+                        parentIndex: tag.parentIndex // Atualiza parentIndex se houver mudança
+                    }
+                }
+            );
+        } else {
+            // Se a tag não existir, cria um novo documento com count igual a 1
             tag.count = 1;
             await collection.insertOne(tag);
         }
 
         res.status(204).send();
     } catch (error) {
-        console.error("Erro ao buscar dados:", error);
-        res.status(500).send("Erro ao buscar dados");
+        console.error("Erro ao criar ou atualizar tag:", error);
+        res.status(500).send("Erro ao criar ou atualizar tag");
     }
 }
 
-async function isUpdate(tag: Tag){
+async function isUpdate(tag: Tag) {
     const db = await connection();
     const collection = db.collection(environments.DATABASE_COLLECTION);
 
-    const document = await collection.findOne( { "index": tag.index, "agent": tag.agent } )
+    const document = await collection.findOne({ "index": tag.index, "agent": tag.agent });
 
-    if(!document){
+    return !!document; // Retorna true se o documento existir, false caso contrário
+}
+
+function validTag(tag: Tag) {
+    // A tag não pode ser seu próprio pai
+    if (!tag) {
         return false;
     }
 
-    return true;
-}
-
-function validTag(tag: Tag){
-    // a tag não pode ser seu próprio pai
-
-    if(tag && tag.parentIndex.includes("|")){
-        if(tag.parentIndex.includes(tag.index.toString())){
+    if (tag.parentIndex.includes("|")) {
+        if (tag.parentIndex.includes(tag.index.toString())) {
             return false;
         }
     }
 
-    if(!tag || tag.index === Number(tag.parentIndex)){
+    if (tag.index === Number(tag.parentIndex)) {
         return false;
     }
 
     return true;
 }
 
-function mapearTags(documents: any[]): Tag[]{
+function mapearTags(documents: any[]): Tag[] {
     return documents.map((doc) => ({
         index: doc.index,
         agent: doc.agent,
@@ -93,4 +103,4 @@ function mapearTags(documents: any[]): Tag[]{
     }));
 }
 
-export default {createTag, findByAgent};
+export default { createTag, findByAgent };
