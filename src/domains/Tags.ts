@@ -1,15 +1,8 @@
+// armazenar no db
 export interface Tag {
+    id: number;
     index: number;
     agent: string;
     tag: string;
     parentIndex: string;
-    counts: Count[];
-    children: Tag[];
 }
-
-export interface Count{
-    fromParentIndex: number;
-    count: number;
-}
-
-export default Tag;

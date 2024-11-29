@@ -1,9 +1,13 @@
 import { Request, Response } from 'express';
-import Tag from '../domains/Tags';
-import connection from '../infra/db/ConnectionDatabase';
-import { buildTree } from '../utils/TreeUtils';
-import environments from '../infra/configs/LoadEnvironment';
-import TagDTO from '../dto/TagsDTO';
+import { Tag } from '../domains/Tags';
+import { createTagDTO, TagDTO } from '../dto/TagsDTO';
+import { TagRepository } from '../repositories/TagRepository';
+import { CountRepository } from '../repositories/CountRepository';
+import { mappingToTag } from '../utils/Mapper';
+import { Count } from '../domains/Count';
+
+const tagRepository = new TagRepository();
+const countRepository = new CountRepository();
 
 async function findByAgent(req: Request, res: Response) {
     try {
@@ -28,7 +32,7 @@ async function findByAgent(req: Request, res: Response) {
 
 async function createTag(req: Request, res: Response) {
     try {
-        const dto: TagDTO = req.body;
+        const dto: createTagDTO = req.body;
 
         // const db = await connection();
         // const collection = db.collection(environments.DATABASE_COLLECTION);
@@ -37,6 +41,16 @@ async function createTag(req: Request, res: Response) {
             res.status(400).json({ message: "A tag não pode ser seu próprio pai" });
             return;
         }
+
+        const tag = await tagRepository.createTag(mappingToTag(dto));
+
+        const count: Count = {
+            count: 1,
+            fromParentIndex: dto.fromParentIndex,
+            tag: tag
+        }
+
+        await countRepository.createCount(count);
 
         // Verifica se a tag já existe para realizar a atualização do count
         // const existingTag = await collection.findOne({ "index": tag.index, "agent": tag.agent });
@@ -75,7 +89,7 @@ async function isUpdate(tag: Tag) {
     // return !!document; // Retorna true se o documento existir, false caso contrário
 }
 
-function isValidTag(tag: TagDTO) {
+function isValidTag(tag: createTagDTO) {
     // A tag não pode ser seu próprio pai
     if (!tag) {
         return false;
@@ -88,15 +102,6 @@ function isValidTag(tag: TagDTO) {
     return true;
 }
 
-// function mapearTags(documents: any[]): Tag[] {
-//     return documents.map((doc) => ({
-//         index: doc.index,
-//         agent: doc.agent,
-//         tag: doc.tag,
-//         parentIndex: doc.parentIndex,
-//         count: doc.count,
-//         children: []
-//     }));
-// }
+
 
 export default { createTag, findByAgent };

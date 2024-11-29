@@ -1,0 +1,29 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Tag {
+  id    Int    @id @default(autoincrement())
+  index Int
+  tag  String
+  agent String
+  parentIndex String @map("parent_index")
+  counts Count[]
+
+  @@map("Tag")
+}
+
+model Count {
+  id    Int    @id @default(autoincrement())
+  count Int
+  fromParentIndex Int @map("from_parent_index")
+  tag Tag @relation(fields: [tagId], references: [id])
+  tagId Int @map("tag_id")
+
+  @@map("Count")
+}
