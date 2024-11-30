@@ -12,18 +12,10 @@ const countRepository = new CountRepository();
 async function findByAgent(req: Request, res: Response) {
     try {
         const agent = req.params.agent;
-        // const db = await connection();
-        // const collection = db.collection(environments.DATABASE_COLLECTION);
+        
+        const tag = await tagRepository.findByAgent(agent);
 
-        // // Buscar documentos da coleção
-        // const documents = await collection.find({ "agent": agent }).toArray();
-
-        // const tags = mapearTags(documents);
-
-        // // Construir a árvore usando a função buildTree
-        // const tree = buildTree(tags);
-
-        // res.json(tree);
+        res.json(tag);
     } catch (error) {
         console.error("Erro ao buscar dados:", error);
         res.status(500).send("Erro ao buscar dados");

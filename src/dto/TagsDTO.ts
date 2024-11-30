@@ -17,6 +17,5 @@ export interface TagDTO {
     tag: string;
     parentIndex: string;
     count: CountDTO;
-    children: TagDTO[];
 }
 

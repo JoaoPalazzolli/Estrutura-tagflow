@@ -1,3 +1,5 @@
+import { Count } from "./Count";
+
 // armazenar no db
 export interface Tag {
     id: number;
@@ -5,4 +7,5 @@ export interface Tag {
     agent: string;
     tag: string;
     parentIndex: string;
+    counts?: Count[];
 }
