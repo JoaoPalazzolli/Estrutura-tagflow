@@ -38,6 +38,28 @@ services:
     networks:
       - tagflow-net
 
+  api:
+    depends_on:
+      postgres:
+        condition: service_started
+    container_name: tagflow
+    image: jpth/tagflow:2.0.0
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: npx prisma migrate dev
+    restart: always
+    profiles: [ 'prod' ]
+    environment:
+      - PORT=${PORT}
+      - DATABASE_URL=${DATABASE_URL}
+    ports:
+      - 3000:${PORT}
+    volumes:
+      - .:/usr/src/tagflow
+    networks:
+      - tagflow-net
+
 volumes:
   postgres-data:
   pgadmin-data:

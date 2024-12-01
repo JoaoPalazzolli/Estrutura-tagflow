@@ -55,8 +55,6 @@ async function createTag(req: Request, res: Response) {
     }
 }
 
-
-
 async function isUpdate(tag: Tag) {
     // const db = await connection();
     // const collection = db.collection(environments.DATABASE_COLLECTION);
