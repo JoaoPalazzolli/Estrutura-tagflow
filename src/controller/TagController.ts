@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import tagService from '../services/TagService';
 
 async function findByAgent(req: Request, res: Response) {

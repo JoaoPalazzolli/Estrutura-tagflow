@@ -1,7 +1,7 @@
 services:
   postgres:
     healthcheck:
-      test: [ "CMD-SHELL", "sh -c 'pg_isready -U root -d ${DATABASE_SCHEMA}'" ]
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U root -d ${DATABASE_SCHEMA}'"]
       timeout: 45s
       interval: 10s
       retries: 5
@@ -26,7 +26,7 @@ services:
     container_name: pgadmin
     restart: always
     image: dpage/pgadmin4
-    profiles: [ 'dev' ]
+    profiles: ['dev']
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
@@ -41,20 +41,23 @@ services:
   api:
     depends_on:
       postgres:
-        condition: service_started
+        condition: service_healthy
     container_name: tagflow
     image: jpth/tagflow:2.0.0
     build:
       context: .
       dockerfile: Dockerfile
-    command: npx prisma migrate dev
+    command: >
+      sh -c "npx prisma generate &&
+             npx prisma migrate dev &&
+             yarn ts-node ./src/Server.ts"
     restart: always
-    profiles: [ 'prod' ]
+    profiles: ['prod']
     environment:
       - PORT=${PORT}
       - DATABASE_URL=${DATABASE_URL}
     ports:
-      - 3000:${PORT}
+      - 80:${PORT}
     volumes:
       - .:/usr/src/tagflow
     networks:
