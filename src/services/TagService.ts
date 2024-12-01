@@ -40,7 +40,7 @@ async function createTag(req: Request, res: Response) {
 
         tag.parentIndex.split("|").forEach(async t => {
             const count: Count = {
-                count: 1,
+                count: 0,
                 fromParentIndex: Number(t),
                 tag: tag
             }
