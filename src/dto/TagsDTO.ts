@@ -1,21 +1,20 @@
 import { CountDTO } from "./CountDTO";
 
-// receber do genesys
+// receber do front
 export interface createTagDTO {
     index: number;
     agent: string;
     tag: string;
     parentIndex: string;
-    fromParentIndex: number;
 }
 
 // retornar
 export interface TagDTO {
-    id: Number;
+    id: number;
     index: number;
     agent: string;
     tag: string;
     parentIndex: string;
-    count: CountDTO;
+    counts?: CountDTO[];
 }
 

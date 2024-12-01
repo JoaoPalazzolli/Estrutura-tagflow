@@ -1,14 +1,12 @@
 import { Router, Request, Response } from 'express';
 import tagService from '../services/TagService';
 
-const router = Router();
+async function findByAgent(req: Request, res: Response) {
+    return tagService.findByAgent(req, res);
+};
 
-router.get("/api/v1/tag/:agent", async (req: Request, res: Response) => {
-    tagService.findByAgent(req, res);
-});
-
-router.post("/api/v1/tag", async (req: Request, res: Response) => {
+async function createTag (req: Request, res: Response) {
    tagService.createTag(req, res);
-});
+};
 
-export default router;
+export default { findByAgent, createTag }

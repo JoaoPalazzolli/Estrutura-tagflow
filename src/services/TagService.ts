@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Tag } from '../domains/Tags';
-import { createTagDTO, TagDTO } from '../dto/TagsDTO';
+import { createTagDTO } from '../dto/TagsDTO';
 import { TagRepository } from '../repositories/TagRepository';
 import { CountRepository } from '../repositories/CountRepository';
 import { mappingToTag } from '../utils/Mapper';
@@ -34,36 +34,19 @@ async function createTag(req: Request, res: Response) {
             return;
         }
 
-        const tag = await tagRepository.createTag(mappingToTag(dto));
+        const document = await tagRepository.createTag(mappingToTag(dto));
 
-        const count: Count = {
-            count: 1,
-            fromParentIndex: dto.fromParentIndex,
-            tag: tag
-        }
+        const tag: Tag = mappingToTag(document);
 
-        await countRepository.createCount(count);
+        tag.parentIndex.split("|").forEach(async t => {
+            const count: Count = {
+                count: 1,
+                fromParentIndex: Number(t),
+                tag: tag
+            }
 
-        // Verifica se a tag já existe para realizar a atualização do count
-        // const existingTag = await collection.findOne({ "index": tag.index, "agent": tag.agent });
-
-        // if (existingTag) {
-        //     // Se a tag já existir, incrementa o campo count e atualiza outros campos relevantes
-        //     await collection.updateOne(
-        //         { "index": tag.index, "agent": tag.agent },
-        //         {
-        //             $inc: { count: 1 },
-        //             $set: {
-        //                 tag: tag.tag,
-        //                 parentIndex: tag.parentIndex // Atualiza parentIndex se houver mudança
-        //             }
-        //         }
-        //     );
-        // } else {
-        //     // Se a tag não existir, cria um novo documento com count igual a 1
-        //     tag.count = 1;
-        //     await collection.insertOne(tag);
-        // }
+            await countRepository.createCount(count);
+        })
 
         res.status(204).send();
     } catch (error) {
@@ -71,6 +54,8 @@ async function createTag(req: Request, res: Response) {
         res.status(500).send("Erro ao criar ou atualizar tag");
     }
 }
+
+
 
 async function isUpdate(tag: Tag) {
     // const db = await connection();
